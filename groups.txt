@@ -1,0 +1,66 @@
+1:
+pl, bo, sk, cz, sl, sr, hr
+
+2:
+az, tr
+
+3:
+fi, ee
+
+4:
+de, nl, lx
+
+5:
+se, is, da
+
+6:
+ro, pt, es, fr, it, en
+
+7: mt
+
+8: ga
+
+9: al
+
+10: lt, lv
+
+11: hu
+
+grupa 1:
+połączenia z 10, 11 +
+
+2:
+brak połączeń
+tr: ee 0.68, al 0.6918
+
+3:
+1 link
+fi: lt 0.50
+ee: hr 0.56
+
+4:
+de: da 0.49, se 0.50, en 0.53
+nl: en 0.51,
+lx: en 0.50, fr 0.53,
+
+5:
+se: en 0.48, it 0.52, 
+is: 
+da: en 0.45, fr 0.52
+
+6: ma 
+
+7:
+mt: al 0.64
+
+8:
+ga: se 0.79, de 0.79+
+
+9:
++
+
+10:
++
+
+11:
+se 0.67
