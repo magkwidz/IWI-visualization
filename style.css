@@ -1,0 +1,49 @@
+svg {
+    background-color: #EEE;
+    margin: 5px 10px 10px 10px;
+}
+
+.node {
+    stroke-opacity: .3;
+    stroke: #000000;
+    stroke-width: 1.5px;
+}
+
+.node text {
+    font-size: 14px;
+    stroke: #4c4c4c;
+    stroke-opacity: .6;
+    stroke-width: 1.5px;
+}
+
+.link_continuous {
+    fill: none;
+    stroke: #000000;
+    stroke-opacity: .6;
+    stroke-width: 1.5px;
+}
+
+.link_dashed {
+    fill: none;
+    stroke: #4c4c4c;
+    stroke-opacity: .8;
+    stroke-width: 1.5px;
+    stroke-dasharray:  10, 5, 15, 5, 10;
+}
+
+.select2-container {
+    width: 100% !important;
+}
+
+.container {
+    width: 100% !important;
+}
+
+.jumbotron {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+}
+
+#ex1Slider .slider-selection {
+    background: #BABABA;
+}

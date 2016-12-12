@@ -1,184 +1,159 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<style>
-
-.node {
-  stroke: #fff;
-  stroke-width: 1.5px;
-}
-
-.node text {
-  font: 9px;
-}
-
-.link {
-  stroke: #999;
-  stroke-opacity: .6;
-}
-
-</style>
+<head>
+    <link rel="stylesheet" type="text/css" media="screen" href="style.css">
+    <link rel="stylesheet" type="text/css" media="screen"
+          href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" type="text/css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.5.3/css/bootstrap-slider.min.css" type="text/css" rel="stylesheet">
+    <script
+            src="https://code.jquery.com/jquery-3.1.1.min.js"
+            integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+            crossorigin="anonymous"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="graph.js" async="" type="text/javascript"></script>
+    <script src="select2.js" async="" type="text/javascript"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.5.3/bootstrap-slider.js"></script>
+    <meta charset="utf-8">
+</head>
 <body>
-<script src="https://d3js.org/d3.v3.min.js"></script>
-<script>
 
-var width = 960,
-    height = 700;
 
-var color = d3.scale.category20();
 
-var force = d3.layout.force()
-    .charge(-120)
-    .gravity(0)
-    .linkDistance(function(d) { return  d.distance; })
-    .size([width, height]);
+<div class="container">
+    <div class="jumbotron">
+        <h2><strong>Wizualizacja Informacji</strong><br>
+        </h2>
+        <p>Wizaulizacja na podstawie kategoryzacji języka naturalnego w oparciu o statystyczną reprezentację języka.</p>
+    </div>
+    <div class="panel panel-default">
+        <form>
+        <fieldset>
+            <row>
+                <div class="col-md-9">
+                    <div class="form-group">
+                        <label> Wybierz grupy</label>
+                        <select class="groupsSelect2" multiple="multiple">
+                            <option value="1">Grupa 1</option>
+                            <option value="2">Grupa 2</option>
+                            <option value="3">Grupa 3</option>
+                            <option value="4">Grupa 4</option>
+                            <option value="5">Grupa 5</option>
+                            <option value="6">Grupa 6</option>
+                            <option value="7">Grupa 7</option>
+                            <option value="8">Grupa 8</option>
+                            <option value="9">Grupa 9</option>
+                            <option value="10">Grupa 10</option>
+                            <option value="11">Grupa 11</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label> Zmień zaznacznie wszytskich grup</label>
+                    <div class="btn-group btn-group-md" role="group" aria-label="Programmatic enabling and disabling">
+                        <button type="button" id="selectAllGroups"  class="js-programmatic-multi-select-all btn btn-default">
+                            Zaznacz
+                        </button>
+                        <button type="button"id="deselectAllGroups" class="js-programmatic-multi-clear btn btn-default">
+                            Odznacz
+                        </button>
+                    </div>
+                </div>
+            </row>
+        </fieldset>
+        <fieldset>
+            <row>
+                <div class="col col-sm-4">
+                    <label>   Filtruj po maksymalnym dystansie:</label>
+                    <input id="ex1" type="text" class="span2" value="" data-slider-min="5" data-slider-max="80" data-slider-step="5" data-slider-value="70"/> <b>80</b>
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+                </div>
+                <div class="col col-sm-4">
+                    Pokazuj niezgrupowane odelgłości
+                </div>
+                <div class="col col-sm-4">
+                </div>
+            </row>
+        </fieldset>
+    </form>
+    </div>
+</div>
+</body>
+<script type="text/javascript">
 
-d3.csv("full.csv").get(function(error, rows) {
-  
-  var graph = {
-    "nodes" : [],
-    "links" : []
-  }
-  for (var i = 0; i < rows.length; i++) {
-    var node = {};
-    node.name = rows[i].lang;
-    node.group = rows[i].group;
-    node.hasLink = false;
-    graph.nodes.push(node);
-  }
-  
-  for (var i = 0; i < rows.length; i++) {
-    for (var j = 0; j < graph.nodes.length; j++) {
-      if (i < j && (rows[i].group === rows[j].group || parseFloat(rows[i][graph.nodes[j].name]) < 0.40)) {
-        var link = {};
-        link.source = i;
-        link.target = j;
-        link.value = 2;
-        link.distance = 10;
-        graph.nodes[i].hasLink = true;
-        graph.nodes[j].hasLink = true;
-        graph.links.push(link);
-      }
-    }
-  }
-  
-  // adding any link to group those without any groups
-  for (var i = 0; i < graph.nodes.length; i++) {
-    if (!graph.nodes[i].hasLink) {
-      var smallest = 10;
-      var smallestIndex = -1;
-      for (var j = 0; j < rows.length; j++) {
-        if (i != j) {
-          var distance = parseFloat(rows[i][graph.nodes[j].name]);
-          if (distance < smallest) {
-            smallest = distance;
-            smallestIndex = j;
-          }
+    $(function() {
+
+        $('#ex1').slider({
+            formatter: function(value) {
+                return 'Current value: ' + value;
+            }
+        });
+
+        var $groupMulti = $(".groupsSelect2").select2({width: 'resolve'});
+
+        function hideAll() {
+            $("g.node").css('opacity', '0');
+            $("g.gLink").css('opacity', '0');
         }
-      }
-      var link = {};
-      link.source = i;
-      link.target = smallestIndex;
-      link.value = 1;
-      link.distance = 40;
-      graph.links.push(link);
-    }
-  }
-  
-  // add links between groups where there are less than two links
-  var newLinks = [
-    { source: 1, target: 19, value: 1, distance: 60},
-    { source: 1, target: 15, value: 1, distance: 60},
-    { source: 25, target: 5, value: 1, distance: 60},
-    { source: 16, target: 12, value: 1, distance: 60},
-    { source: 14, target: 4, value: 1, distance: 60},
-    { source: 12, target: 10, value: 1, distance: 60},
-    { source: 24, target: 15, value: 1, distance: 60},
-    { source: 27, target: 16, value: 1, distance: 60},
-    { source: 23, target: 3, value: 1, distance: 60},
-    { source: 6, target: 5, value: 1, distance: 60}
-  ]
-  
-  for (var i = 0; i < newLinks.length; i++) {
-    graph.links.push(newLinks[i]);
-  }
-  
-  // recalculate distances based on their real distances
-  // smallest - 5px, biggest - 80px
-  var smallestDistance = 666.0;
-  var biggestDistance = -1.0;
-  for (var i = 0; i < rows.length; i++) {
-    for (var j = i + 1; j < rows.length; j++) {
-        var distance = parseFloat(rows[i][rows[j].lang]);
-        if (distance < smallestDistance) {
-            smallestDistance = distance;
+
+        function showAll() {
+            $("g.node").css('opacity', '1');
+            $("g.gLink").css('opacity', '1');
+
         }
-        if (distance > biggestDistance) {
-            biggestDistance = distance;
-        }
-    }
-  }
-  
-  for (var i = 0; i < graph.links.length; i++) {
-    var foundDistance = parseFloat(rows[graph.links[i].source][rows[graph.links[i].target].lang]);
-    graph.links[i].distance = 5.0 + 75.0 * (foundDistance - smallestDistance) / (biggestDistance - smallestDistance);
-  }
-  
-    force
-      .nodes(graph.nodes)
-      .links(graph.links)
-      .linkDistance(height/8)
-      .start();
 
-  var link = svg.selectAll(".link")
-      .data(graph.links)
-    .enter().append("line")
-      .attr("class", "link")
-      .style("stroke-width", function(d) { return d.value; });
+        $("#selectAllGroups").click(function(){
+            $(".groupsSelect2 > option").prop("selected","selected");
+            $(".groupsSelect2").trigger("change");
+           showAll();
+        });
+        $("#deselectAllGroups").click(function(){
+            $groupMulti.val(null).trigger("change");
+            hideAll();
+        });
 
-var node = svg.selectAll(".node")
-    .data(graph.nodes)
-    .enter().append("g")
-    .attr("class", "node")
-    .call(force.drag);
+        $("#selectAllGroups").click();
 
-node.append("circle")
-    .attr("r", 12)
-    .style("fill", function (d) {
-    return color(d.group);
-})
+        $groupMulti.on("change", function (e) {
+            hideAll();
+            var selectedGroups = $(this).val();
+            selectedGroups.forEach(function(groupId) {
+                selectElementsByGroup(groupId);
+            });
 
-node.append("text")
-      .attr("dx", 10)
-      .attr("dy", ".35em")
-      .text(function(d) { return d.name })
-      .style("stroke", "gray");
+        });
 
-  force.on("tick", function() {
-    link.attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
+        function deselectElementsByGroup(groupId) {
+            $("g.node[group="+groupId+"]").css('opacity', '0');
+            $("g.gLink[group="+groupId+"]").css('opacity', '0');
+            $("g.gLink[gSource="+groupId+"]").css('opacity', '0');
+            $("g.gLink[gTarget="+groupId+"]").css('opacity', '0');
+        };
 
-    d3.selectAll("circle").attr("cx", function (d) {
-        return d.x;
-    })
-        .attr("cy", function (d) {
-        return d.y;
+        function selectElementsByGroup(groupId) {
+            $("g.node[group="+groupId+"]").css('opacity', '1');
+            $("g.gLink[group="+groupId+"]").css('opacity', '1');
+            //noGroupLinks
+            var sourceLinks = $("g.gLink[gSource="+groupId+"]");
+            for (var i = 0; i < sourceLinks.length; i++) {
+                var targetLinkGroup = sourceLinks[i].getAttribute("gTarget");
+                var targetLinkGroupOpacity = $("g.node[group="+targetLinkGroup+"]").css('opacity');
+                if (targetLinkGroupOpacity == '1') {
+                    $("g.gLink[gSource="+groupId+"][gTarget="+targetLinkGroup+"]").css('opacity', '1');
+                }
+            }
+            var targetLinks = $("g.gLink[gTarget="+groupId+"]");
+            for (var i = 0; i < targetLinks.length; i++) {
+                var sourceLinkGroup = targetLinks[i].getAttribute("gSource");
+                var sourceLinkGroupOpacity = $("g.node[group="+sourceLinkGroup+"]").css('opacity');
+                if (sourceLinkGroupOpacity == '1') {
+                    $("g.gLink[gSource="+sourceLinkGroup+"][gTarget="+groupId+"]").css('opacity', '1');
+                }
+            }
+        };
+
     });
-
-    d3.selectAll("text").attr("x", function (d) {
-        return d.x;
-    })
-        .attr("y", function (d) {
-        return d.y;
-    });
-  });
-});  
 
 </script>
-</body>
+
 </html>
