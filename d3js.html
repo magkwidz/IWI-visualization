@@ -32,7 +32,7 @@
             <row>
                 <div class="col-md-9">
                     <div class="form-group">
-                        <label> Wybierz grupy</label>
+                        <label> Wybierz grupy:</label>
                         <select class="groupsSelect2" multiple="multiple">
                             <option value="1">Grupa 1</option>
                             <option value="2">Grupa 2</option>
@@ -49,7 +49,7 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <label> Zmień zaznacznie wszytskich grup</label>
+                    <label> Zmień zaznacznie wszystkich grup:</label>
                     <div class="btn-group btn-group-md" role="group" aria-label="Programmatic enabling and disabling">
                         <button type="button" id="selectAllGroups"  class="js-programmatic-multi-select-all btn btn-default">
                             Zaznacz
@@ -64,14 +64,34 @@
         <fieldset>
             <row>
                 <div class="col col-sm-4">
-                    <label>   Filtruj po maksymalnym dystansie:</label>
-                    <input id="ex1" type="text" class="span2" value="" data-slider-min="5" data-slider-max="80" data-slider-step="5" data-slider-value="70"/> <b>80</b>
+                    <label> Ustawienia:</label>
+                    <!-- <div class="checkbox">
+                       <label>
+                            <input id="showOtherLinks" type="checkbox" value="option1" checked>
+                            Pokazuj powiązania pozagrupowe
+                        </label>
+                    </div>-->
+                    <div class="checkbox">
+                        <label>
+                            <input id="showNodeText" type="checkbox" value="option2" checked>
+                            Pokazuj etykiety języków
+                        </label>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input id="showLinkText" type="checkbox" value="option3" checked>
+                            Pokazuj etykiety odległości języków
+                        </label>
+                    </div>
+                </div>
+                <div class="col col-sm-4">
+                    <label> Filtruj po maksymalnym dystansie:</label>
+                    <div>
+                        <b>5 </b>
+                        <input id="ex1" type="text" class="span2" value="" data-slider-min="5" data-slider-max="80" data-slider-step="1" data-slider-value="70"/>
+                        <b> 80 </b>
+                    </div>
 
-                </div>
-                <div class="col col-sm-4">
-                    Pokazuj niezgrupowane odelgłości
-                </div>
-                <div class="col col-sm-4">
                 </div>
             </row>
         </fieldset>
@@ -85,7 +105,7 @@
 
         $('#ex1').slider({
             formatter: function(value) {
-                return 'Current value: ' + value;
+                return 'Aktualny dystans: ' + value;
             }
         });
 
@@ -151,6 +171,88 @@
                 }
             }
         };
+
+
+        $("#showOtherLinks").change(function() {
+            if(this.checked) {
+                $("g.gLink[group='noGroup']").css('opacity', '1');
+            }
+            else {
+                $("g.gLink[group='noGroup']").css('opacity', '0');
+            }
+        });
+
+        $("#showLinkText").change(function() {
+            if(this.checked) {
+                $('g.gLink text').css('opacity', '1');
+            }
+            else {
+                $('g.gLink text').css('opacity', '0');
+            }
+        });
+
+        $("#showNodeText").change(function() {
+            if(this.checked) {
+                $('g.node text').css('opacity', '1');
+            }
+            else {
+                $('g.node text').css('opacity', '0');
+            }
+        });
+
+        var originalVal;
+
+
+        function sliderHideAndShowLinks(sliderValue) {
+
+            //hide Links
+            var lessDistanceLinks = $("g.gLink").filter(function() {
+                return $(this).attr("distance") >= sliderValue;
+            });
+            lessDistanceLinks.css('opacity', '0');
+
+            //show Links
+            var graterDistanceLinks = $("g.gLink").filter(function() {
+                return $(this).attr("distance") < sliderValue;
+            });
+            graterDistanceLinks.css('opacity', '1');
+
+        };
+
+
+        function sliderHideAndShowNodes(sliderValue) {
+            var nodes = $("g.node").map(function(){return $(this).attr("name");}).get();
+            // var nodes = $("g.node");
+            for (var i = 0; i < nodes.length; i++) {
+                var langNodeName = nodes[i];
+                var nodeOpacity = $("g.gLink").filter(function() {
+                    var $this = $(this);
+                    return ($this.attr("nSource") == langNodeName
+                            && $this.css("opacity") == '1') || ($this.attr("nTarget") == langNodeName
+                        && $this.css("opacity") == '1');
+                });
+                if (nodeOpacity.length == 0) {
+                    $("g.node[name="+langNodeName+"]").css('opacity', '0');
+                } else {
+                    $("g.node[name="+langNodeName+"]").css('opacity', '1');
+                }
+            }
+
+        };
+
+
+        $('#ex1').slider().on('slideStart', function(ev){
+            originalVal = $('.span2').data('slider').getValue();
+        });
+
+        $('#ex1').slider().on('slideStop', function(ev){
+            var newVal = $('.span2').data('slider').getValue();
+            if(originalVal != newVal) {
+              //  alert('Value Changed! New value: ' + newVal);
+                sliderHideAndShowLinks(newVal);
+                sliderHideAndShowNodes(newVal);
+            }
+        });
 
     });
 

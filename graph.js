@@ -11,6 +11,7 @@ var height = $( window ).height() - margin.top - margin.bottom;
 var factor = 3;
 var farDistance = NaN;
 var precision = 2;
+var radius = 5;
 
 var color = d3.scale.category20();
 
@@ -166,6 +167,15 @@ d3.csv("full.csv").get(function (error, rows) {
         .attr("gTarget", function (d) {
             return d.target.group;
         })
+        .attr("nSource", function (d) {
+            return d.source.name;
+        })
+        .attr("nTarget", function (d) {
+            return d.target.name;
+        })
+        .attr("distance", function (d) {
+            return d.distance.toFixed(precision);
+        })
         .append("line")
         .attr("class", "link")
         .attr("class", function (d) {
@@ -205,12 +215,15 @@ d3.csv("full.csv").get(function (error, rows) {
         .attr("group", function (d) {
             return d.group
         })
+        .attr("name", function (d) {
+            return d.name;
+        })
         .style("opacity", 1)
         .call(force.drag);
 
     node.append("circle")
         .attr("r", function(d) {
-            return (d.hasLink === true) ? 10 : 5;
+            return (d.hasLink === true) ? 2*radius : radius;
         })
         .style("fill", function (d) {
             return color(d.group);
@@ -238,12 +251,9 @@ d3.csv("full.csv").get(function (error, rows) {
                 return d.target.y;
             });
 
-        d3.selectAll("circle").attr("cx", function (d) {
-            return d.x;
-        })
-            .attr("cy", function (d) {
-                return d.y;
-            });
+        d3.selectAll("circle")
+            .attr("cx", function(d) { return d.x = Math.max(2*radius, Math.min(width - 2*radius, d.x)); })
+            .attr("cy", function(d) { return d.y = Math.max(2*radius, Math.min(height - 2*radius, d.y)); });
 
         d3.selectAll("text").attr("x", function (d) {
             return d.x;
