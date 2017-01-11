@@ -9,7 +9,7 @@ var width = $( window ).width() - margin.left - margin.right;
 var height = $( window ).height() - margin.top - margin.bottom;
 
 var factor = 3;
-var farDistance = NaN;
+var farDistance = 200;
 var precision = 2;
 var radius = 5;
 
@@ -29,6 +29,24 @@ function toFixed(value, precision) {
     return result;
 }
 
+
+Array.prototype.contains = function(v) {
+    for(var i = 0; i < this.length; i++) {
+        if(this[i] === v) return true;
+    }
+    return false;
+};
+
+Array.prototype.unique = function() {
+    var arr = [];
+    for(var i = 0; i < this.length; i++) {
+        if(!arr.contains(this[i])) {
+            arr.push(this[i]);
+        }
+    }
+    return arr;
+}
+
 var force = d3.layout.force()
     .charge(-120)
     .gravity(0.01)
@@ -43,6 +61,7 @@ var svg = d3.select("body").append("svg")
 
 d3.csv("full.csv").get(function (error, rows) {
 
+    var groups=[];
     var graph = {
         "nodes": [],
         "links": []
@@ -51,22 +70,27 @@ d3.csv("full.csv").get(function (error, rows) {
         var node = {};
         node.name = rows[i].lang;
         node.group = rows[i].group;
+        node.root = false;
         node.hasLink = false;
         graph.nodes.push(node);
+        groups.push(rows[i].group);
     }
 
     //var res = Math.max.apply(Math,graph.nodes.map(function(o){return o.group;}))
     //alert('Max group = ' + res);
 
-
-
     for (var i = 0; i < rows.length; i++) {
         for (var j = 0; j < graph.nodes.length; j++) {
-            if (i < j && (rows[i].group === rows[j].group || parseFloat(rows[i][graph.nodes[j].name]) < 0.40)) {
+
+            if (i < j && (rows[i].group === rows[j].group )) {
                 var link = {};
                 link.source = i;
                 link.target = j;
                 link.value = 2;
+                link.group = rows[i].group;
+                link.gSource = rows[i].group;
+                link.gTarget = rows[j].group;
+                link.root = false,
                 link.distance = 10;
                 graph.nodes[i].hasLink = true;
                 graph.nodes[j].hasLink = true;
@@ -93,23 +117,39 @@ d3.csv("full.csv").get(function (error, rows) {
             link.source = i;
             link.target = smallestIndex;
             link.value = 1;
+            link.group = "noGroup";
+            link.gSource = rows[i].group;
+            link.gTarget = rows[smallestIndex].group;
+            link.root = false,
             link.distance = farDistance;
             graph.links.push(link);
         }
     }
 
+    // add nodes of all groups
+    var uniquesGroups = groups.unique();
+    for (var i = 0; i < uniquesGroups.length; i++) {
+        var node = {};
+        node.group = uniquesGroups[i];
+        node.name = "Grupa: " + node.group;
+        node.root = true;
+        node.hasLink = false;
+        graph.nodes.push(node);
+    }
+
     // add links between groups where there are less than two links
     var newLinks = [
-        {source: 1, target: 19, value: 1, distance: farDistance},
-        {source: 1, target: 15, value: 1, distance: farDistance},
-        {source: 25, target: 5, value: 1, distance: farDistance},
-        {source: 16, target: 12, value: 1, distance: farDistance},
-        {source: 14, target: 4, value: 1, distance: farDistance},
-        {source: 12, target: 10, value: 1, distance: farDistance},
-        {source: 24, target: 15, value: 1, distance: farDistance},
-        {source: 27, target: 16, value: 1, distance: farDistance},
-        {source: 23, target: 3, value: 1, distance: farDistance},
-        {source: 6, target: 5, value: 1, distance: farDistance}
+        {source: 1, target: 19, value: 1, root: false, group:"noGroup", gSource: rows[1].group, gTarget: rows[19].group , distance: farDistance},
+        {source: 1, target: 15, value: 1, root: false, group:"noGroup", gSource: rows[1].group, gTarget: rows[15].group, distance: farDistance},
+        {source: 25, target: 5, value: 1, root: false, group:"noGroup", gSource: rows[25].group, gTarget: rows[5].group, distance: farDistance},
+        {source: 16, target: 12, value: 1, root: false, group:"noGroup", gSource: rows[16].group, gTarget: rows[12].group, distance: farDistance},
+        {source: 14, target: 4, value: 1, root: false, group:"noGroup", gSource: rows[14].group, gTarget: rows[4].group, distance: farDistance},
+        {source: 12, target: 10, value: 1, root: false, group:"noGroup", gSource: rows[12].group, gTarget: rows[10].group, distance: farDistance},
+        {source: 24, target: 15, value: 1, root: false, group:"noGroup", gSource: rows[24].group, gTarget: rows[15].group, distance: farDistance},
+        {source: 27, target: 16, value: 1, root: false, group:"noGroup", gSource: rows[27].group, gTarget: rows[16].group, distance: farDistance},
+        {source: 23, target: 3, value: 1, root: false, group:"noGroup", gSource: rows[23].group, gTarget: rows[3].group, distance: farDistance},
+        {source: 6, target: 5, value: 1, root: false, group:"noGroup", gSource: rows[6].group, gTarget: rows[5].group, distance: farDistance},
+        {source: 1, target: 19, value: 1, root: false, group:"noGroup", gSource: rows[1].group, gTarget: rows[19].group, distance: farDistance},
     ]
 
     for (var i = 0; i < newLinks.length; i++) {
@@ -136,6 +176,30 @@ d3.csv("full.csv").get(function (error, rows) {
         var foundDistance = parseFloat(rows[graph.links[i].source][rows[graph.links[i].target].lang]);
         graph.links[i].distance = 5.0 + 75.0 * (foundDistance - smallestDistance) / (biggestDistance - smallestDistance);
     }
+
+
+    var currentLinks = graph.links.length;
+    // add links for group to group
+    for (var i = 0; i < currentLinks; i++) {
+        if (graph.links[i].group === "noGroup") {
+            var link = graph.links[i];
+            console.log(graph.links[i]);
+            var indexSource = graph.nodes.map(function(e) { return e.name; }).indexOf("Grupa: " + link.gSource);
+            var indexTarget = graph.nodes.map(function(e) { return e.name; }).indexOf("Grupa: " + link.gTarget);
+            graph.links.push({
+                                source: indexSource,
+                                target: indexTarget,
+                                value: 1.8,
+                                root: true,
+                                group: "noGroup",
+                                gSource: link.gSource,
+                                gTarget: link.gTarget,
+                                distance: link.distance
+                            }
+                        );
+        }
+    }
+
 
     force.nodes(graph.nodes);
     force.links(graph.links);
@@ -179,7 +243,7 @@ d3.csv("full.csv").get(function (error, rows) {
         .append("line")
         .attr("class", "link")
         .attr("class", function (d) {
-            return (d.value === 1) ? "link_dashed" : "link_continuous";
+            return (d.value === 1) ? "link_dashed" :  (d.value === 2) ?  "link_continuous" : "link_dashed_root"
         })
         .style("stroke-width", function (d) {
             return d.value;
@@ -211,9 +275,14 @@ d3.csv("full.csv").get(function (error, rows) {
     var node = svg.selectAll(".node")
         .data(graph.nodes)
         .enter().append("g")
-        .attr("class", "node")
         .attr("group", function (d) {
-            return d.group
+            return d.group;
+        })
+        .attr("root", function (d) {
+            return d.root;
+        })
+        .attr("class", function (d) {
+            return (d.root) ? "node root" :  "node"
         })
         .attr("name", function (d) {
             return d.name;
@@ -225,10 +294,15 @@ d3.csv("full.csv").get(function (error, rows) {
         .attr("r", function(d) {
             return (d.hasLink === true) ? 2*radius : radius;
         })
+        .attr("root", function(d) {
+            return d.root;
+        })
+        .attr("group", function (d) {
+            return d.group;
+        })
         .style("fill", function (d) {
             return color(d.group);
         });
-
 
     node.append("text")
         .attr("dx", 15)
@@ -254,6 +328,47 @@ d3.csv("full.csv").get(function (error, rows) {
         d3.selectAll("circle")
             .attr("cx", function(d) { return d.x = Math.max(2*radius, Math.min(width - 2*radius, d.x)); })
             .attr("cy", function(d) { return d.y = Math.max(2*radius, Math.min(height - 2*radius, d.y)); });
+
+        d3.selectAll("circle[root=true][group='2']")
+            .attr("cx", function(d) { return d.x = 300; })
+            .attr("cy", function(d) { return d.y = 300; });
+
+        var rootCircle =  d3.selectAll("circle[root=false]")[0];
+        var linq = Enumerable.From(rootCircle);
+        var rootResult =
+            linq.GroupBy(function(x){return x.getAttribute("group");})
+                .Select(function(x){return {
+                    count:x.Count(),
+                    group:x.Key(),
+                    cx: x.Average(function(y){return y.getAttribute("cx")|0;}),
+                    cy: x.Average(function(y){return y.getAttribute("cy")|0;}) };})
+
+                .ToArray();
+        //console.log(rootResult);
+
+        for (var i = 0; i < rootResult.length; i++) {
+            var circle = rootResult[i];
+            if (circle.count > 1) {
+                d3.select("circle[root=true][group='" + circle.group + "']")
+                    .attr("cx", function (d) {
+                        return d.x = circle.cx;
+                    })
+                    .attr("cy", function (d) {
+                        return d.y = circle.cy;
+                    });
+            }
+            else {
+                //d3.select("g.node[root=true][group='" + circle.group + "']").remove();
+               /* d3.select("circle[root=true][group='" + circle.group + "']")
+                    .attr("cx", function (d) {
+                        return d.x = circle.cx;
+                    })
+                    .attr("cy", function (d) {
+                        return d.y = circle.cy;
+                    });
+                    */
+            }
+        }
 
         d3.selectAll("text").attr("x", function (d) {
             return d.x;

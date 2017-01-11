@@ -16,6 +16,14 @@ svg {
     stroke-width: 1.5px;
 }
 
+.node.root text {
+    font-size: 14px;
+    font-weight: lighter;
+    fill: #2222ff;
+    stroke-opacity: .3;
+    stroke-width: 0.5px;
+}
+
 .link_continuous {
     fill: none;
     stroke: #000000;
@@ -29,6 +37,14 @@ svg {
     stroke-opacity: .8;
     stroke-width: 1.5px;
     stroke-dasharray:  10, 5, 15, 5, 10;
+}
+
+.link_dashed_root {
+    fill: none;
+    stroke: #2222ff;
+    stroke-opacity: .8;
+    stroke-width: 1px;
+    stroke-dasharray:  5, 5, 5, 5, 5;
 }
 
 .select2-container {
